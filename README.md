@@ -251,4 +251,20 @@ Mode                LastWriteTime         Length Name
 ```
 </br> We've found our first flag from user.txt(15fda4d08c15a1f2d11aa6106fe8e491)! But let's see if we can elevate our privileges on this account.
 
-6. Privilege Escalation
+6. Privilege Escalation</br>
+Upon inspection, we find the group of users in the machine, what we would prefer to be escalating to, is *Administrator*
+```
+*Evil-WinRM* PS C:\Users> ls
+
+
+    Directory: C:\Users
+
+
+Mode                LastWriteTime         Length Name
+----                -------------         ------ ----
+d-----       10/23/2021  11:27 AM                Administrator
+d-----        3/31/2022   6:41 AM                legacyy
+d-r---       10/23/2021  11:27 AM                Public
+d-----       10/25/2021  12:23 PM                svc_deploy
+d-----        2/23/2022   5:45 PM                TRX
+```
