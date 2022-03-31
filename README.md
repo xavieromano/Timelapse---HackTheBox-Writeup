@@ -252,7 +252,7 @@ Mode                LastWriteTime         Length Name
 </br> We've found our first flag from user.txt(15fda4d08c15a1f2d11aa6106fe8e491)! But let's see if we can elevate our privileges on this account.
 
 6. Privilege Escalation</br>
-Upon inspection, we find the group of users in the machine, what we would prefer to be escalating to, is *Administrator*
+Upon inspection, we find the group of users in the machine, what we would prefer to be escalating to, is *Administrator*.
 ```
 *Evil-WinRM* PS C:\Users> ls
 
@@ -268,3 +268,17 @@ d-r---       10/23/2021  11:27 AM                Public
 d-----       10/25/2021  12:23 PM                svc_deploy
 d-----        2/23/2022   5:45 PM                TRX
 ```
+</br>and we have also found a dll file that may contain the Administrator's Credentials.
+```
+*Evil-WinRM* PS C:\Program Files\LAPS\CSE> ls
+
+
+    Directory: C:\Program Files\LAPS\CSE
+
+
+Mode                LastWriteTime         Length Name
+----                -------------         ------ ----
+-a----         5/5/2021   7:04 AM         184232 AdmPwd.dll
+```
+
+</br>Now we have a target 
